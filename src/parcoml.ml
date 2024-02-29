@@ -15,7 +15,6 @@ type error =
     desc : string;
     pos : int
   }
-
 let input_sub (start : int) (len : int) (s : input) = 
   {
     text = String.sub (s.text) start len;
@@ -92,3 +91,5 @@ let ( <* ) (p1 : 'a parser) (p2 : 'b parser) : 'a parser =
   
   }
 
+let ( <*> ) (p1 : 'a parser) ( p2 : 'b parser) : ('a * 'b) parser = 
+  failwith "TODO"

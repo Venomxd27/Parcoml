@@ -47,6 +47,16 @@ let bind (f : 'a -> 'b parser) (p : 'a parser) : ('b parser) =
       | Error error -> Error error
      }
 
+let parse_while (p : char -> bool) : string parser = 
+  {
+    run = fun input -> 
+      let n = String.length input.text in 
+      let i = ref 0 in 
+      while (String.get input.text !i |> p) && !i < n do 
+          incr i 
+      done;
+      Ok (input_sub !i (n - !i) input,String.sub input.text 0 !i)
+  }
 let prefix (prefix_str : string) : string parser = 
   {
     run = fun input ->
@@ -92,4 +102,31 @@ let ( <* ) (p1 : 'a parser) (p2 : 'b parser) : 'a parser =
   }
 
 let ( <*> ) (p1 : 'a parser) ( p2 : 'b parser) : ('a * 'b) parser = 
+  {
+    run = fun input -> 
+              input 
+              |> p1.run
+              |> Result.map (fun (input' , x) ->
+                    input' 
+                      |> p2.run 
+                      |> Result.map (fun (input , y) -> (input , (x , y)))
+                  )
+              |> Result.join
+  }
+
+
+let ( <|> ) (p1 : 'a parser) (p2 : 'a parser) : 'a parser = 
+  {
+    run  = fun input -> 
+              match p1.run input with 
+              | Ok (input' , x) -> Ok (input' , x)
+              | Error left_error -> 
+                  input 
+                    |> p2.run
+                    |> Result.map_error (fun right_error -> {pos = left_error.pos ; 
+                                                    desc = Printf.sprintf "%s or %s" left_error.desc right_error.desc})
+  }
+
+
+let optional (p : 'a parser) : 'a option parser = 
   failwith "TODO"

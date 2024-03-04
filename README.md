@@ -1,2 +1,2 @@
 # Parcoml
-Fast and Lightweight Monodic Parser Combinator library in Ocaml. No dependencies required.
+Fast and Lightweight Monadic Parser Combinator library in Ocaml. No dependencies required.

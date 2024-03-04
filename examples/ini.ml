@@ -25,12 +25,11 @@ let show_sections (sections : section list) =
   |> String.concat " , "
   |> Printf.sprintf "[%s]"
 
-let ini : section list Parcoml.parser = Parcoml.fail {
-    desc = "yet to be implemented";
-     pos = 0  
-    }
+let is_space (x : char) = x == ' ' || x == '\n'
 
-
+let section_name : string Parcoml.parser = 
+  let open Parcoml in 
+  prefix "[" *> parse_while (fun x -> x != ']') <* prefix "]"
 
 let read_whole_file (file_path : string) : string = 
         let ch = open_in file_path in
@@ -38,7 +37,23 @@ let read_whole_file (file_path : string) : string =
         let s = really_input_string ch n in
         close_in ch;
         s
-        
+
+let wss : string Parcoml.parser = 
+  let open Parcoml in 
+    parse_while is_space
+let pair_parser : pair Parcoml.parser = 
+  let open Parcoml in 
+  let name = parse_while (fun x -> not (is_space x) && x != '=') in
+  (wss *> name <* wss <* prefix "=" <* wss) <*> (name <* wss)
+   
+let section_parser : section Parcoml.parser = 
+  let open Parcoml in 
+  section_name <*> many pair_parser 
+  |> map (fun (name , pairs) -> {name = name ; pairs = pairs})
+
+let ini : section list Parcoml.parser = 
+  let open Parcoml in 
+  many section_parser 
 
   let () = 
    let result = "./test.ini"
